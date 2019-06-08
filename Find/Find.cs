@@ -51,12 +51,16 @@ namespace Find
             actions.OnSkipEvent += this.skipped;
 
             txtResult.Text = "";
-            List<string> result = actions.Find(txtFind.Text);
+            Task.Run(async () => setResult(await actions.FindAsync(txtFind.Text), actions));
+        }
+
+        private void setResult(List<string> result, FileActions actions)
+        {
             if (string.IsNullOrEmpty(txtResult.Text))
-                txtResult.Text = string.Format("Find {1} in path {2}{0}",Environment.NewLine, txtFind.Text, actions.RootDirectoryPath);
+                InvokeControl(txtResult, (c) => c.Text = string.Format("Find {1} in path {2}{0}", Environment.NewLine, txtFind.Text, actions.RootDirectoryPath));
             else
-                txtResult.Text = string.Format("{0}{1}{1}Find {2} in path {3}{1}", txtResult.Text, Environment.NewLine, txtFind.Text, actions.RootDirectoryPath);
-            txtResult.Text = string.Format("{0}{1}{2}", txtResult.Text, Environment.NewLine, string.Join(Environment.NewLine, result));
+                InvokeControl(txtResult, (c) => c.Text = string.Format("{0}{1}{1}Find {2} in path {3}{1}", c.Text, Environment.NewLine, txtFind.Text, actions.RootDirectoryPath));
+            InvokeControl(txtResult, (c) => c.Text = string.Format("{0}{1}{2}", c.Text, Environment.NewLine, string.Join(Environment.NewLine, result)));
         }
 
         private void btnReplace_Click(object sender, EventArgs e)
@@ -96,9 +100,17 @@ namespace Find
         private void skipped(string file)
         {
             if (string.IsNullOrEmpty(txtResult.Text))
-                txtResult.Text = string.Format("{0} skipped", file);
+                InvokeControl(txtResult, (c) => c.Text = string.Format("{0} skipped", file));
             else
-                txtResult.Text = string.Format("{0}{1}{2} skipped", txtResult.Text, Environment.NewLine, file);
+                InvokeControl(txtResult, (c) => c.Text = string.Format("{0}{1}{2} skipped", txtResult.Text, Environment.NewLine, file));
+        }
+
+        private void InvokeControl(Control control, Action<Control> action)
+        {
+            if (control.InvokeRequired)
+                control.Invoke(new Action<Control, Action<Control>>((c, a) => InvokeControl(c, a)), new object[] { control, action });
+            else
+                action(control);
         }
     }
 }

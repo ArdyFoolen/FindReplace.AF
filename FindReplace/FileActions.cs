@@ -38,6 +38,15 @@ namespace FindReplace
             return files.Where(w => hasSearchText(w, searchText)).ToList();
         }
 
+        public async Task<List<string>> FindAsync(string searchText)
+        {
+            await Task.Yield();
+            if (string.IsNullOrWhiteSpace(searchText))
+                return null;
+            List<string> files = this.getFiles(this.RootDirectoryPath);
+            return files.Where(w => hasSearchText(w, searchText)).ToList();
+        }
+
         private List<string> replacedList;
         public List<string> Replace(string searchText, string replaceText)
         {
