@@ -111,18 +111,18 @@ namespace FindReplace
                 replacedList.Add(file);
                 string text = File.ReadAllText(file);
                 text = text.Replace(searchText, replaceText);
-                write(file, text, getEncoding(file));
+                write(file, text);
             }
         }
 
         private bool IsReadOnly(FileInfo fileInfo)
             => fileInfo.IsReadOnly;
 
-        private void write(string file, string text, Encoding encoding)
+        private void write(string file, string text)
         {
             try
             {
-                using (StreamWriter writer = new StreamWriter(file, false, encoding))
+                using (StreamWriter writer = new StreamWriter(file, false, getEncoding(file)))
                 {
                     writer.Write(text);
                 }

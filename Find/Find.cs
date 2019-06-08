@@ -69,19 +69,19 @@ namespace Find
         private void setResultFind(List<string> result, FileActions actions)
         {
             if (string.IsNullOrEmpty(txtResult.Text))
-                InvokeControl(txtResult, (c) => c.Text = string.Format("Find {1} in path {2}{0}", Environment.NewLine, txtFind.Text, actions.RootDirectoryPath));
+                InvokeControl(txtResult, (c) => c.Text = $"Find {txtFind.Text} in path {actions.RootDirectoryPath}{Environment.NewLine}");
             else
-                InvokeControl(txtResult, (c) => c.Text = string.Format("{0}{1}{1}Find {2} in path {3}{1}", c.Text, Environment.NewLine, txtFind.Text, actions.RootDirectoryPath));
-            InvokeControl(txtResult, (c) => c.Text = string.Format("{0}{1}{2}", c.Text, Environment.NewLine, string.Join(Environment.NewLine, result)));
+                InvokeControl(txtResult, (c) => c.Text = $"{c.Text}{Environment.NewLine}{Environment.NewLine}Find {txtFind.Text} in path {actions.RootDirectoryPath}{Environment.NewLine}");
+            InvokeControl(txtResult, (c) => c.Text = $"{c.Text}{Environment.NewLine}{string.Join(Environment.NewLine, result)}");
         }
 
         private void setResultReplace(List<string> result, FileActions actions)
         {
             if (string.IsNullOrEmpty(txtResult.Text))
-                InvokeControl(txtResult, (c) => c.Text = string.Format("Replace {1} with {2} in path {3}{0}", Environment.NewLine, txtFind.Text, txtReplace.Text, actions.RootDirectoryPath));
+                InvokeControl(txtResult, (c) => c.Text = $"Replace {txtFind.Text} with {txtReplace.Text} in path {actions.RootDirectoryPath}{Environment.NewLine}");
             else
-                InvokeControl(txtResult, (c) => c.Text = string.Format("{0}{1}{1}Replace {2} with {3} in path {4}{1}", txtResult.Text, Environment.NewLine, txtFind.Text, txtReplace.Text, actions.RootDirectoryPath));
-            InvokeControl(txtResult, (c) => c.Text = string.Format("{0}{1}{2}", c.Text, Environment.NewLine, string.Join(Environment.NewLine, result)));
+                InvokeControl(txtResult, (c) => c.Text = $"{txtResult.Text}{Environment.NewLine}{Environment.NewLine}Replace {txtFind.Text} with {txtReplace.Text} in path {actions.RootDirectoryPath}{Environment.NewLine}");
+            InvokeControl(txtResult, (c) => c.Text = $"{Environment.NewLine}{c.Text}{string.Join(Environment.NewLine, result)}");
         }
 
         private void btnReplace_Click(object sender, EventArgs e)
@@ -116,9 +116,9 @@ namespace Find
         private void skipped(string file)
         {
             if (string.IsNullOrEmpty(txtResult.Text))
-                InvokeControl(txtResult, (c) => c.Text = string.Format("{0} skipped", file));
+                InvokeControl(txtResult, (c) => c.Text = $"{file} skipped");
             else
-                InvokeControl(txtResult, (c) => c.Text = string.Format("{0}{1}{2} skipped", txtResult.Text, Environment.NewLine, file));
+                InvokeControl(txtResult, (c) => c.Text = $"{txtResult.Text}{Environment.NewLine}{file} skipped");
         }
 
         private void InvokeControl(Control control, Action<Control> action)
