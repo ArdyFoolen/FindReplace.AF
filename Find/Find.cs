@@ -67,7 +67,21 @@ namespace Find
             actions.OnSkipEvent += this.skipped;
 
             txtResult.Text = "";
+            ToggleEnable();
             Task.Run(async () => setResultFind(await actions.FindAsync(txtFind.Text), actions));
+        }
+
+        private void ToggleEnable()
+        {
+            InvokeControl(txtFind, (c) => c.Enabled = !c.Enabled);
+            InvokeControl(txtReplace, (c) => c.Enabled = !c.Enabled);
+            InvokeControl(txtPath, (c) => c.Enabled = !c.Enabled);
+            InvokeControl(btnPath, (c) => c.Enabled = !c.Enabled);
+            InvokeControl(txtPattern, (c) => c.Enabled = !c.Enabled);
+            InvokeControl(chkInclude, (c) => c.Enabled = !c.Enabled);
+            InvokeControl(chkCase, (c) => c.Enabled = !c.Enabled);
+            InvokeControl(btnFind, (c) => c.Enabled = !c.Enabled);
+            InvokeControl(btnReplace, (c) => c.Enabled = !c.Enabled);
         }
 
         private void setResultFind(List<string> result, FileActions actions)
@@ -77,6 +91,7 @@ namespace Find
             else
                 InvokeControl(txtResult, (c) => c.Text = $"{c.Text}{Environment.NewLine}{Environment.NewLine}Find {txtFind.Text} in path {actions.RootDirectoryPath}{Environment.NewLine}");
             InvokeControl(txtResult, (c) => c.Text = $"{c.Text}{Environment.NewLine}{string.Join(Environment.NewLine, result)}");
+            ToggleEnable();
         }
 
         private void setResultReplace(List<string> result, FileActions actions)
@@ -86,6 +101,7 @@ namespace Find
             else
                 InvokeControl(txtResult, (c) => c.Text = $"{txtResult.Text}{Environment.NewLine}{Environment.NewLine}Replace {txtFind.Text} with {txtReplace.Text} in path {actions.RootDirectoryPath}{Environment.NewLine}");
             InvokeControl(txtResult, (c) => c.Text = $"{Environment.NewLine}{c.Text}{string.Join(Environment.NewLine, result)}");
+            ToggleEnable();
         }
 
         private void btnReplace_Click(object sender, EventArgs e)
@@ -114,7 +130,8 @@ namespace Find
             actions.OnSkipEvent += this.skipped;
 
             txtResult.Text = "";
-            Task.Run(async () => setResultReplace(await actions.ReplaceAsync(txtFind.Text, txtReplace.Text), actions));
+            ToggleEnable();
+            Task task = Task.Run(async () => setResultReplace(await actions.ReplaceAsync(txtFind.Text, txtReplace.Text), actions));
         }
 
         private void skipped(string file)
