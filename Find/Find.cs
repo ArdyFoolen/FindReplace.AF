@@ -6,6 +6,7 @@ using System.Data;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Security.Principal;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -20,6 +21,17 @@ namespace Find
             folderBrowser.Description = "Select the folder that you want to use";
             folderBrowser.ShowNewFolderButton = false;
             txtPath.Text = @"C:\";
+            if (IsAdministrator())
+                this.Text += " (Administrator)";
+        }
+
+        private bool IsAdministrator()
+        {
+            using (WindowsIdentity identity = WindowsIdentity.GetCurrent())
+            {
+                WindowsPrincipal principal = new WindowsPrincipal(identity);
+                return principal.IsInRole(WindowsBuiltInRole.Administrator);
+            }
         }
 
         private void btnPath_Click(object sender, EventArgs e)
@@ -51,15 +63,24 @@ namespace Find
             actions.OnSkipEvent += this.skipped;
 
             txtResult.Text = "";
-            Task.Run(async () => setResult(await actions.FindAsync(txtFind.Text), actions));
+            Task.Run(async () => setResultFind(await actions.FindAsync(txtFind.Text), actions));
         }
 
-        private void setResult(List<string> result, FileActions actions)
+        private void setResultFind(List<string> result, FileActions actions)
         {
             if (string.IsNullOrEmpty(txtResult.Text))
                 InvokeControl(txtResult, (c) => c.Text = string.Format("Find {1} in path {2}{0}", Environment.NewLine, txtFind.Text, actions.RootDirectoryPath));
             else
                 InvokeControl(txtResult, (c) => c.Text = string.Format("{0}{1}{1}Find {2} in path {3}{1}", c.Text, Environment.NewLine, txtFind.Text, actions.RootDirectoryPath));
+            InvokeControl(txtResult, (c) => c.Text = string.Format("{0}{1}{2}", c.Text, Environment.NewLine, string.Join(Environment.NewLine, result)));
+        }
+
+        private void setResultReplace(List<string> result, FileActions actions)
+        {
+            if (string.IsNullOrEmpty(txtResult.Text))
+                InvokeControl(txtResult, (c) => c.Text = string.Format("Replace {1} with {2} in path {3}{0}", Environment.NewLine, txtFind.Text, txtReplace.Text, actions.RootDirectoryPath));
+            else
+                InvokeControl(txtResult, (c) => c.Text = string.Format("{0}{1}{1}Replace {2} with {3} in path {4}{1}", txtResult.Text, Environment.NewLine, txtFind.Text, txtReplace.Text, actions.RootDirectoryPath));
             InvokeControl(txtResult, (c) => c.Text = string.Format("{0}{1}{2}", c.Text, Environment.NewLine, string.Join(Environment.NewLine, result)));
         }
 
@@ -89,12 +110,7 @@ namespace Find
             actions.OnSkipEvent += this.skipped;
 
             txtResult.Text = "";
-            List<string> result = actions.Replace(txtFind.Text, txtReplace.Text);
-            if (string.IsNullOrEmpty(txtResult.Text))
-                txtResult.Text = string.Format("Replace {1} with {2} in path {3}{0}", Environment.NewLine, txtFind.Text, txtReplace.Text, actions.RootDirectoryPath);
-            else
-                txtResult.Text = string.Format("{0}{1}{1}Replace {2} with {3} in path {4}{1}", txtResult.Text, Environment.NewLine, txtFind.Text, txtReplace.Text, actions.RootDirectoryPath);
-            txtResult.Text = string.Format("{0}{1}{2}", txtResult.Text, Environment.NewLine, string.Join(Environment.NewLine, result));
+            Task.Run(async () => setResultReplace(await actions.ReplaceAsync(txtFind.Text, txtReplace.Text), actions));
         }
 
         private void skipped(string file)

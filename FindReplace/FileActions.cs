@@ -18,10 +18,7 @@ namespace FindReplace
         public event SkipDelegate OnSkipEvent;
 
         private void Skip(string file)
-        {
-            if (OnSkipEvent != null)
-                OnSkipEvent(file);
-        }
+            => OnSkipEvent?.Invoke(file);
 
         public FileActions()
         {
@@ -41,10 +38,7 @@ namespace FindReplace
         public async Task<List<string>> FindAsync(string searchText)
         {
             await Task.Yield();
-            if (string.IsNullOrWhiteSpace(searchText))
-                return null;
-            List<string> files = this.getFiles(this.RootDirectoryPath);
-            return files.Where(w => hasSearchText(w, searchText)).ToList();
+            return Find(searchText);
         }
 
         private List<string> replacedList;
@@ -56,6 +50,12 @@ namespace FindReplace
             this.replacedList = new List<string>();
             files.ForEach(f => replace(f, searchText, replaceText));
             return this.replacedList;
+        }
+
+        public async Task<List<string>> ReplaceAsync(string searchText, string replaceText)
+        {
+            await Task.Yield();
+            return Replace(searchText, replaceText);
         }
 
         private List<string> getFiles(string path)
@@ -87,7 +87,7 @@ namespace FindReplace
                             }
                             else
                                 if (line.ToLowerInvariant().Contains(searchText.ToLowerInvariant()))
-                                return true;
+                                    return true;
                         }
                     }
                 }
@@ -103,10 +103,33 @@ namespace FindReplace
         {
             if (hasSearchText(file, searchText))
             {
+                if (IsReadOnly(new FileInfo(file)))
+                {
+                    Skip(file);
+                    return;
+                }
                 replacedList.Add(file);
                 string text = File.ReadAllText(file);
                 text = text.Replace(searchText, replaceText);
-                File.WriteAllText(file, text, getEncoding(file));
+                write(file, text, getEncoding(file));
+            }
+        }
+
+        private bool IsReadOnly(FileInfo fileInfo)
+            => fileInfo.IsReadOnly;
+
+        private void write(string file, string text, Encoding encoding)
+        {
+            try
+            {
+                using (StreamWriter writer = new StreamWriter(file, false, encoding))
+                {
+                    writer.Write(text);
+                }
+            }
+            catch (IOException)
+            {
+                Skip(file);
             }
         }
 

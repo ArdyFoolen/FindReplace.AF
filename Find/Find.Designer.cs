@@ -202,7 +202,7 @@
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
             this.Name = "Find";
-            this.Text = "Find";
+            this.Text = "Find & Replace";
             this.ResumeLayout(false);
             this.PerformLayout();
 
