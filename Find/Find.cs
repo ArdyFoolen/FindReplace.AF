@@ -1,4 +1,5 @@
 ﻿using FindReplace;
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -20,7 +21,9 @@ namespace Find
             InitializeComponent();
             folderBrowser.Description = "Select the folder that you want to use";
             folderBrowser.ShowNewFolderButton = false;
-            txtPath.Text = @"C:\";
+            folderBrowser.SelectedPath = string.IsNullOrWhiteSpace(Settings.Default.RecentFolder) ? @"C:\" : Settings.Default.RecentFolder;
+            txtPath.Text = folderBrowser.SelectedPath;
+
             if (IsAdministrator())
                 this.Text += " (Administrator)";
         }
@@ -39,6 +42,7 @@ namespace Find
             if (folderBrowser.ShowDialog() == DialogResult.OK)
             {
                 txtPath.Text = folderBrowser.SelectedPath;
+                Settings.Default.RecentFolder = folderBrowser.SelectedPath;
             }
         }
 
