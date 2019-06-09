@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -14,6 +15,7 @@ namespace FindReplace
         public string FilePattern { get; set; }
         public bool IncludingSubdirectories { get; set; }
         public bool CaseSensitive { get; set; }
+        public CancellationToken CancellationToken { get; set; }
 
         public delegate void SkipDelegate(string file);
         public event SkipDelegate OnSkipEvent;
@@ -61,10 +63,21 @@ namespace FindReplace
 
         private List<string> getFiles(string path)
         {
-            List<string> files = (string.IsNullOrWhiteSpace(this.FilePattern)) ? Directory.GetFiles(path).ToList() : Directory.GetFiles(path, this.FilePattern).ToList();
-            if (this.IncludingSubdirectories)
+            ThrowIfCancellationRequested();
+            List<string> files = new List<string>();
+
+            try
             {
-                Directory.GetDirectories(path).ToList().ForEach(f => files.AddRange(this.getFiles(f)));
+                files = (string.IsNullOrWhiteSpace(this.FilePattern)) ? Directory.GetFiles(path).ToList() : Directory.GetFiles(path, this.FilePattern).ToList();
+
+                if (this.IncludingSubdirectories)
+                {
+                    Directory.GetDirectories(path).ToList().ForEach(f => files.AddRange(this.getFiles(f)));
+                }
+            }
+            catch (Exception)
+            {
+                Skip(path);
             }
 
             return files;
@@ -72,9 +85,10 @@ namespace FindReplace
 
         private bool hasSearchText(string file, string searchText)
         {
-            if (File.Exists(file))
+            ThrowIfCancellationRequested();
+            try
             {
-                try
+                if (File.Exists(file))
                 {
                     using (StreamReader sr = File.OpenText(file))
                     {
@@ -88,32 +102,46 @@ namespace FindReplace
                             }
                             else
                                 if (line.ToLowerInvariant().Contains(searchText.ToLowerInvariant()))
-                                    return true;
+                                return true;
                         }
                     }
                 }
-                catch (Exception)
-                {
-                    Skip(file);
-                }
+            }
+            catch (Exception)
+            {
+                Skip(file);
             }
             return false;
         }
 
+        private void ThrowIfCancellationRequested()
+        {
+#if DEBUG
+            Debug.WriteLine($"Canceled: {CancellationToken.IsCancellationRequested}");
+#endif
+            if (!CancellationToken.IsCancellationRequested)
+                return;
+            CancellationToken.ThrowIfCancellationRequested();
+        }
+
         private void replace(string file, string searchText, string replaceText)
         {
-            if (hasSearchText(file, searchText))
+            try
             {
-                if (IsReadOnly(new FileInfo(file)))
+                if (hasSearchText(file, searchText))
                 {
-                    Skip(file);
-                    return;
+                    if (IsReadOnly(new FileInfo(file)))
+                    {
+                        Skip(file);
+                        return;
+                    }
+                    replacedList.Add(file);
+                    string text = File.ReadAllText(file);
+                    text = text.Replace(searchText, replaceText);
+                    write(file, text);
                 }
-                replacedList.Add(file);
-                string text = File.ReadAllText(file);
-                text = text.Replace(searchText, replaceText);
-                write(file, text);
             }
+            catch (Exception) { }
         }
 
         private bool IsReadOnly(FileInfo fileInfo)
