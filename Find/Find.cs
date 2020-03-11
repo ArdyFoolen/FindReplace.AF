@@ -27,7 +27,7 @@ namespace Find
             folderBrowser.Description = "Select the folder that you want to use";
             folderBrowser.ShowNewFolderButton = false;
             folderBrowser.SelectedPath = string.IsNullOrWhiteSpace(Settings.Default.RecentFolder) ? @"C:\" : Settings.Default.RecentFolder;
-            txtPath.Text = folderBrowser.SelectedPath;
+            InvokeControl(txtPath, c => c.Text = folderBrowser.SelectedPath);
 
             if (IsAdministrator())
                 this.Text += " (Administrator)";
@@ -46,7 +46,7 @@ namespace Find
         {
             if (folderBrowser.ShowDialog() == DialogResult.OK)
             {
-                txtPath.Text = folderBrowser.SelectedPath;
+                InvokeControl(txtPath, c => c.Text = folderBrowser.SelectedPath);
                 Settings.Default.RecentFolder = folderBrowser.SelectedPath;
             }
         }
@@ -64,7 +64,7 @@ namespace Find
                 return;
             }
 
-            this.btnCancel.Visible = true;
+            InvokeControl(btnCancel, c => c.Visible = true);
             cancellationTokenSource = new CancellationTokenSource();
             cancellationTokenSource.Token.Register(this.canceled);
             this.canceling = false;
@@ -77,7 +77,7 @@ namespace Find
             actions.OnSkipEvent += this.skipped;
             actions.CancellationToken = cancellationTokenSource.Token;
 
-            txtResult.Text = "";
+            InvokeControl(txtResult, c => c.Text = string.Empty);
             ToggleEnable();
 
             task = Task.Factory.StartNew(async () => setResultFind(await actions.FindAsync(txtFind.Text), actions), cancellationTokenSource.Token);
@@ -142,7 +142,7 @@ namespace Find
                 return;
             }
 
-            this.btnCancel.Visible = true;
+            InvokeControl(btnCancel, c => c.Visible = true);
             cancellationTokenSource = new CancellationTokenSource();
             cancellationTokenSource.Token.Register(this.canceled);
             this.canceling = false;
@@ -155,7 +155,7 @@ namespace Find
             actions.OnSkipEvent += this.skipped;
             actions.CancellationToken = cancellationTokenSource.Token;
 
-            txtResult.Text = "";
+            InvokeControl(txtResult, c => c.Text = string.Empty);
             ToggleEnable();
             task = Task.Factory.StartNew(async () => setResultReplace(await actions.ReplaceAsync(txtFind.Text, txtReplace.Text), actions), cancellationTokenSource.Token);
         }
@@ -182,10 +182,11 @@ namespace Find
                 InvokeControl(txtResult, (c) => c.Text = $"{txtResult.Text}{Environment.NewLine}{Environment.NewLine}Find & Replace Task has been Canceled!");
         }
 
-        private void InvokeControl(Control control, Action<Control> action)
+        private void InvokeControl<T>(T control, Action<T> action)
+            where T: Control
         {
             if (control.InvokeRequired)
-                control.Invoke(new Action<Control, Action<Control>>((c, a) => InvokeControl(c, a)), new object[] { control, action });
+                control.Invoke(new Action<T, Action<T>>((c, a) => InvokeControl(c, a)), new object[] { control, action });
             else
                 action(control);
         }
@@ -193,7 +194,7 @@ namespace Find
         private void btnCancel_Click(object sender, EventArgs e)
         {
             this.cancellationTokenSource.Cancel();
-            this.btnCancel.Visible = false;
+            InvokeControl(btnCancel, c => c.Visible = false);
         }
     }
 }
