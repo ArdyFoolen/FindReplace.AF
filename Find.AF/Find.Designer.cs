@@ -1,4 +1,4 @@
-﻿namespace Find
+﻿namespace Find.AF
 {
     partial class Find
     {

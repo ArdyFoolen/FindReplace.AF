@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace FindReplace
+namespace FindReplace.AF
 {
     public class FileActions
     {

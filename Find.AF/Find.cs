@@ -1,4 +1,4 @@
-﻿using FindReplace;
+﻿using FindReplace.AF;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
@@ -13,7 +13,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace Find
+namespace Find.AF
 {
     public partial class Find : Form
     {

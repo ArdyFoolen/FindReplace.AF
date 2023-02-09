@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Find
+namespace Find.AF
 {
     internal sealed class Settings : ApplicationSettingsBase
     {
